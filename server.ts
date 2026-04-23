@@ -1,52 +1,69 @@
 import express from "express";
 import path from "path";
-import fs from "fs";
+import fs from "fs/promises";
+import { existsSync } from "fs";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_FILE = path.join(__dirname, "data.json");
+const BACKUP_FILE = path.join(__dirname, "data.json.bak");
 
-// Ensure data file exists with initial empty object if not present
-if (!fs.existsSync(DATA_FILE)) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({}, null, 2));
-}
-
-/**
- * Atomic Write implementation
- * Writes to a temporary file first, then renames it to the target file.
- * This prevents data corruption if the process crashes during a write.
- */
-async function atomicWrite(filePath: string, data: any) {
-  const tmpPath = `${filePath}.tmp`;
-  await fs.promises.writeFile(tmpPath, JSON.stringify(data, null, 2), 'utf8');
-  await fs.promises.rename(tmpPath, filePath);
-}
+// Queue for atomic writes to prevent race conditions
+let writeQueue = Promise.resolve();
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Middleware to parse JSON bodies
   app.use(express.json({ limit: '10mb' }));
 
   // API Routes
-  app.get("/api/data", async (req, res) => {
+  app.get("/data", async (req, res) => {
     try {
-      const data = await fs.promises.readFile(DATA_FILE, "utf8");
+      if (!existsSync(DATA_FILE)) {
+        return res.json(null); // Client will use defaults
+      }
+      const data = await fs.readFile(DATA_FILE, "utf-8");
       res.json(JSON.parse(data));
     } catch (error) {
+      console.error("Error reading data:", error);
       res.status(500).json({ error: "Failed to read data" });
     }
   });
 
-  app.post("/api/data", async (req, res) => {
+  app.post("/data", async (req, res) => {
+    const newData = req.body;
+    
+    // Basic validation
+    if (!newData || typeof newData !== 'object') {
+      return res.status(400).json({ error: "Invalid data format" });
+    }
+
+    // Atomic write logic via queue
+    writeQueue = writeQueue.then(async () => {
+      try {
+        // Create backup if exists
+        if (existsSync(DATA_FILE)) {
+          await fs.copyFile(DATA_FILE, BACKUP_FILE);
+        }
+
+        const tempFile = `${DATA_FILE}.tmp`;
+        await fs.writeFile(tempFile, JSON.stringify(newData, null, 2), "utf-8");
+        await fs.rename(tempFile, DATA_FILE);
+        
+        console.log("Data saved successfully");
+      } catch (error) {
+        console.error("Error saving data:", error);
+        throw error;
+      }
+    });
+
     try {
-      await atomicWrite(DATA_FILE, req.body);
+      await writeQueue;
       res.json({ success: true });
     } catch (error) {
-      console.error("Save error:", error);
       res.status(500).json({ error: "Failed to save data" });
     }
   });
@@ -57,22 +74,7 @@ async function startServer() {
       server: { middlewareMode: true },
       appType: "spa",
     });
-    
-    // Use vite's connect instance as middleware
     app.use(vite.middlewares);
-
-    // Serve index.html through Vite's transformation in dev
-    app.get('*', async (req, res, next) => {
-      const url = req.originalUrl;
-      try {
-        let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
-        template = await vite.transformIndexHtml(url, template);
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
-      } catch (e) {
-        vite.ssrFixStacktrace(e as Error);
-        next(e);
-      }
-    });
   } else {
     // Serve static files in production
     const distPath = path.join(process.cwd(), 'dist');
@@ -83,7 +85,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 }
 

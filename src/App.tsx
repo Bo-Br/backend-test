@@ -49,6 +49,64 @@ import { Language, translations } from './i18n';
 // UTILITIES & CONSTANTS
 // ==========================================
 
+const DEFAULTS = {
+  character: { name: 'SOLO LEVELLER', level: 5, exp: 450 },
+  statusBars: [
+    { id: '1', name: 'HP', color: '#ef4444', value: 85, max: 100, repeatCount: 0 },
+    { id: '2', name: 'MP', color: '#3b82f6', value: 40, max: 100, repeatCount: 0 },
+    { id: '3', name: 'STAMINA', color: '#10b981', value: 60, max: 100, repeatCount: 0 },
+    { id: '4', name: 'INTEL', color: '#a855f7', value: 15, max: 100, repeatCount: 0 },
+  ],
+  mainQuest: {
+    id: 'main-1',
+    title: 'AWAKEN THE MONARCH',
+    description: 'Transcend the limits of a human core. Achieve level 10 to unlock hidden potential.',
+    type: 'main' as any,
+    rewards: [{ statusBarId: 'exp', amount: 1000 }]
+  },
+  sideQuests: [
+    {
+      id: 'sq-1',
+      title: 'Daily Run (10KM)',
+      description: 'Build your base stamina through consistent cardio.',
+      type: 'side-quest' as any,
+      rewards: [{ statusBarId: '3', amount: 20 }, { statusBarId: 'exp', amount: 50 }]
+    },
+    {
+      id: 'sq-2',
+      title: 'Deep Meditation',
+      description: 'Focus your mind to expand your mana pool.',
+      type: 'side-quest' as any,
+      rewards: [{ statusBarId: '2', amount: 15 }, { statusBarId: '4', amount: 5 }]
+    }
+  ],
+  grindTasks: [
+    {
+      id: 'gt-1',
+      title: 'Set of Pushups',
+      type: 'grind-task' as any,
+      rewards: [{ statusBarId: '1', amount: 2 }, { statusBarId: '3', amount: 5 }]
+    },
+    {
+      id: 'gt-2',
+      title: 'Deep Work Session',
+      type: 'grind-task' as any,
+      rewards: [{ statusBarId: '4', amount: 10 }, { statusBarId: 'exp', amount: 15 }]
+    }
+  ],
+  problems: [
+    { id: 'prob-1', title: 'System Fatigue', xpPenalty: 50 },
+    { id: 'prob-2', title: 'Mental Fog', xpPenalty: 25 }
+  ],
+  skills: [
+    { id: 'sk-1', name: 'Sprint', level: 1, description: 'Increased movement speed.' },
+    { id: 'sk-2', name: 'Focus', level: 1, description: 'Enhanced mental clarity.' }
+  ],
+  logs: [],
+  theme: 'indigo',
+  language: 'en' as Language
+};
+
 // Simple UID generator for new tasks, skills, etc.
 const uid = () => Math.random().toString(36).substring(2, 9);
 
@@ -75,175 +133,80 @@ export default function App() {
   // 1. DATA PERSISTENCE & INITIALIZATION
   // ------------------------------------------
   
-  // Character ID State: Name, Level, and Experience
-  const [character, setCharacter] = useState<Character>({ 
-    name: 'SOLO LEVELLER', 
-    level: 5, 
-    exp: 450 
-  });
-
-  const [statusBars, setStatusBars] = useState<StatusBar[]>([
-    { id: '1', name: 'HP', color: '#ef4444', value: 85, max: 100, repeatCount: 0 },
-    { id: '2', name: 'MP', color: '#3b82f6', value: 40, max: 100, repeatCount: 0 },
-    { id: '3', name: 'STAMINA', color: '#10b981', value: 60, max: 100, repeatCount: 0 },
-    { id: '4', name: 'INTEL', color: '#a855f7', value: 15, max: 100, repeatCount: 0 },
-  ]);
-
-  const [mainQuest, setMainQuest] = useState<Quest | null>({
-    id: 'main-1',
-    title: 'AWAKEN THE MONARCH',
-    description: 'Transcend the limits of a human core. Achieve level 10 to unlock hidden potential.',
-    type: 'main',
-    rewards: [
-      { statusBarId: 'exp', amount: 1000 }
-    ]
-  });
-
-  const [sideQuests, setSideQuests] = useState<Quest[]>([
-    {
-      id: 'sq-1',
-      title: 'Daily Run (10KM)',
-      description: 'Build your base stamina through consistent cardio.',
-      type: 'side-quest',
-      rewards: [
-        { statusBarId: '3', amount: 20 },
-        { statusBarId: 'exp', amount: 50 }
-      ]
-    },
-    {
-      id: 'sq-2',
-      title: 'Deep Meditation',
-      description: 'Focus your mind to expand your mana pool.',
-      type: 'side-quest',
-      rewards: [
-        { statusBarId: '2', amount: 15 },
-        { statusBarId: '4', amount: 5 }
-      ]
-    }
-  ]);
-
-  const [grindTasks, setGrindTasks] = useState<GrindTask[]>([
-    {
-      id: 'gt-1',
-      title: 'Set of Pushups',
-      type: 'grind-task',
-      rewards: [
-        { statusBarId: '1', amount: 2 },
-        { statusBarId: '3', amount: 5 }
-      ]
-    },
-    {
-      id: 'gt-2',
-      title: 'Deep Work Session',
-      type: 'grind-task',
-      rewards: [
-        { statusBarId: '4', amount: 10 },
-        { statusBarId: 'exp', amount: 15 }
-      ]
-    }
-  ]);
-
-  const [problems, setProblems] = useState<Problem[]>([
-    {
-      id: 'prob-1',
-      title: 'System Fatigue',
-      xpPenalty: 50,
-    },
-    {
-      id: 'prob-2',
-      title: 'Mental Fog',
-      xpPenalty: 25,
-    }
-  ]);
-
-  const [skills, setSkills] = useState<Skill[]>([
-    { id: 'sk-1', name: 'Sprint', level: 1, description: 'Increased movement speed.' },
-    { id: 'sk-2', name: 'Focus', level: 1, description: 'Enhanced mental clarity.' }
-  ]);
-
-  // ------------------------------------------
-  // 2. THEME & LOCALIZATION
-  // ------------------------------------------
-
-  const [language, setLanguage] = useState<Language>('en');
-  const lang = translations[language] || translations.en;
-
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [theme, setTheme] = useState<string>('indigo');
-
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Initial Load from Server
+  // Core Application State
+  const [character, setCharacter] = useState<Character>(DEFAULTS.character);
+  const [statusBars, setStatusBars] = useState<StatusBar[]>(DEFAULTS.statusBars);
+  const [mainQuest, setMainQuest] = useState<Quest | null>(DEFAULTS.mainQuest);
+  const [sideQuests, setSideQuests] = useState<Quest[]>(DEFAULTS.sideQuests);
+  const [grindTasks, setGrindTasks] = useState<GrindTask[]>(DEFAULTS.grindTasks);
+  const [problems, setProblems] = useState<Problem[]>(DEFAULTS.problems);
+  const [skills, setSkills] = useState<Skill[]>(DEFAULTS.skills);
+  const [logs, setLogs] = useState<LogEntry[]>(DEFAULTS.logs);
+  const [language, setLanguage] = useState<Language>(DEFAULTS.language);
+  const [theme, setTheme] = useState<string>(DEFAULTS.theme);
+
+  const lang = translations[language] || translations.en;
+
+  // Initial Data Fetch
   useEffect(() => {
-    const fetchData = async () => {
+    const loadAppData = async () => {
       try {
-        const res = await fetch('/api/data');
-        const data = await res.json();
-        
-        if (data && Object.keys(data).length > 2) { // Check if more than just empty object
-          if (data.character) setCharacter(data.character);
-          if (data.statusBars) setStatusBars(data.statusBars);
-          if (data.mainQuest !== undefined) setMainQuest(data.mainQuest);
-          if (data.sideQuests) setSideQuests(data.sideQuests);
-          if (data.grindTasks) setGrindTasks(data.grindTasks);
-          if (data.problems) setProblems(data.problems);
-          if (data.skills) setSkills(data.skills);
-          if (data.logs) setLogs(data.logs);
-          if (data.theme) setTheme(data.theme);
-          if (data.language) setLanguage(data.language);
+        const response = await fetch('/data');
+        const data = await response.json();
+        if (data) {
+          setCharacter(data.character || DEFAULTS.character);
+          setStatusBars(data.statusBars || DEFAULTS.statusBars);
+          setMainQuest(data.mainQuest);
+          setSideQuests(data.sideQuests || DEFAULTS.sideQuests);
+          setGrindTasks(data.grindTasks || DEFAULTS.grindTasks);
+          setProblems(data.problems || DEFAULTS.problems);
+          setSkills(data.skills || DEFAULTS.skills);
+          setLogs(data.logs || DEFAULTS.logs);
+          setLanguage(data.language || DEFAULTS.language);
+          setTheme(data.theme || DEFAULTS.theme);
         }
-      } catch (err) {
-        console.error("Failed to fetch data from server:", err);
+      } catch (error) {
+        console.error("Failed to load data from server:", error);
       } finally {
         setIsLoaded(true);
       }
     };
-    fetchData();
+    loadAppData();
   }, []);
 
-  // Synchronizes full application state with Server and fallback to LocalStorage.
+  // Sync to Server on Change (Debounced)
   useEffect(() => {
     if (!isLoaded) return;
 
-    // LocalStorage fallback for instant recovery
-    localStorage.setItem('rpg_character', JSON.stringify(character));
-    localStorage.setItem('rpg_statusBars', JSON.stringify(statusBars));
-    localStorage.setItem('rpg_mainQuest', JSON.stringify(mainQuest));
-    localStorage.setItem('rpg_sideQuests', JSON.stringify(sideQuests));
-    localStorage.setItem('rpg_grindTasks', JSON.stringify(grindTasks));
-    localStorage.setItem('rpg_problems', JSON.stringify(problems));
-    localStorage.setItem('rpg_skills', JSON.stringify(skills));
-    localStorage.setItem('rpg_logs', JSON.stringify(logs));
-    localStorage.setItem('rpg_theme', theme);
-    localStorage.setItem('rpg_lang', language);
-
-    const timer = setTimeout(async () => {
-      const payload = {
-        character,
-        statusBars,
-        mainQuest,
-        sideQuests,
-        grindTasks,
-        problems,
-        skills,
-        logs,
-        theme,
-        language
-      };
-      
+    const syncData = async () => {
       try {
-        await fetch('/api/data', {
+        const appData = {
+          character,
+          statusBars,
+          mainQuest,
+          sideQuests,
+          grindTasks,
+          problems,
+          skills,
+          logs,
+          language,
+          theme
+        };
+        await fetch('/data', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(appData)
         });
-      } catch (err) {
-        console.error("Failed to sync with server:", err);
+      } catch (error) {
+        console.error("Failed to sync data to server:", error);
       }
-    }, 1000); // Debounce save to 1s
+    };
 
-    return () => clearTimeout(timer);
-  }, [character, statusBars, mainQuest, sideQuests, grindTasks, problems, skills, theme, language, logs, isLoaded]);
+    const timeout = setTimeout(syncData, 1000);
+    return () => clearTimeout(timeout);
+  }, [character, statusBars, mainQuest, sideQuests, grindTasks, problems, skills, logs, language, theme, isLoaded]);
 
   // Theme configuration for Tailwind classes
   const themeColors: Record<string, { primary: string; text: string; bg: string; border: string; hover: string; shadow: string; glow: string }> = {
@@ -287,12 +250,6 @@ export default function App() {
 
   const t = themeColors[theme] || themeColors.indigo;
   const tColor = theme === 'rose' ? 'rose' : theme === 'amber' ? 'amber' : theme === 'emerald' ? 'emerald' : 'indigo';
-
-  // ------------------------------------------
-  // 3. PERSISTENCE ENGINE
-  // ------------------------------------------
-  
-  const [showWelcome, setShowWelcome] = useState(false);
 
   // ------------------------------------------
   // 4. ACTION HANDLERS (GAME MECHANICS)
@@ -392,6 +349,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [confirmClearLogs, setConfirmClearLogs] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   // Reset confirmation when sidebar closes
   useEffect(() => {
@@ -417,16 +375,20 @@ export default function App() {
   }, []);
 
   // Trigger level up animation
+  // (Using character.level as source of truth)
   useEffect(() => {
-    const savedLevel = localStorage.getItem('rpg_last_level');
+    if (!isLoaded) return;
     const currentLevel = character.level;
     
-    if (savedLevel && parseInt(savedLevel) < currentLevel) {
+    // We can still use sessionStorage for transient UI state like "has seen level up recently"
+    // or just rely on the level change.
+    const lastLevelSeen = parseInt(sessionStorage.getItem('rpg_last_level_seen') || '0');
+    if (lastLevelSeen > 0 && lastLevelSeen < currentLevel) {
       setShowLevelUp(currentLevel);
       setTimeout(() => setShowLevelUp(null), 1500);
     }
-    localStorage.setItem('rpg_last_level', currentLevel.toString());
-  }, [character.level]);
+    sessionStorage.setItem('rpg_last_level_seen', currentLevel.toString());
+  }, [character.level, isLoaded]);
 
   const handleApplyPenalty = (penalty: number) => {
     setScreenShake(true);
@@ -443,27 +405,45 @@ export default function App() {
   /**
    * Clears all local storage and reloads to restore default example data.
    */
-  const handleLoadExample = () => {
-    localStorage.clear();
-    window.location.reload();
+  const handleLoadExample = async () => {
+    try {
+      await fetch('/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(DEFAULTS)
+      });
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   /**
    * Resets the application to an absolute zero state.
    * Manually sets all storage keys to their empty defaults.
    */
-  const handleEraseAll = () => {
-    localStorage.setItem('rpg_character', JSON.stringify({ name: '', level: 1, exp: 0 }));
-    localStorage.setItem('rpg_statusBars', JSON.stringify([]));
-    localStorage.setItem('rpg_mainQuest', 'null');
-    localStorage.setItem('rpg_sideQuests', JSON.stringify([]));
-    localStorage.setItem('rpg_grindTasks', JSON.stringify([]));
-    localStorage.setItem('rpg_problems', JSON.stringify([]));
-    localStorage.setItem('rpg_skills', JSON.stringify([]));
-    localStorage.setItem('rpg_logs', JSON.stringify([]));
-    localStorage.setItem('rpg_theme', 'indigo');
-    localStorage.setItem('rpg_lang', language);
-    window.location.reload();
+  const handleEraseAll = async () => {
+    const emptyState = {
+      ...DEFAULTS,
+      character: { name: '', level: 1, exp: 0 },
+      statusBars: [],
+      mainQuest: null,
+      sideQuests: [],
+      grindTasks: [],
+      problems: [],
+      skills: [],
+      logs: []
+    };
+    try {
+      await fetch('/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emptyState)
+      });
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   /**
