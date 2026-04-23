@@ -1,0 +1,63 @@
+/*
+ * Global Stylesheet
+ * -----------------
+ * Uses Tailwind CSS v4 with custom bento-style component classes.
+ */
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  /* Prevent horizontal overflow and handle mobile scaling */
+  html, body {
+    overflow-x: hidden;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* GLOBAL SYSTEM AESTHETIC: Hidden Scrollbars */
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  * {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
+@layer components {
+  /**
+   * Bento UI Card
+   * Transparent dark overlay with subtle borders and blur.
+   */
+  .bento-card {
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(51, 65, 85, 0.5);
+    border-radius: 24px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(8px);
+  }
+
+  /**
+   * Status Bar Background 
+   * Container for dynamic stat progress bars.
+   */
+  .status-bar-container {
+    height: 8px;
+    width: 100%;
+    background: #1e293b;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+}

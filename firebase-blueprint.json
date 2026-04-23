@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "Character": {
+      "title": "Character",
+      "description": "Represents the user's progress and identity.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the character (e.g., Sung Jin-Woo)." },
+        "level": { "type": "integer", "minimum": 1, "description": "The current character level." },
+        "exp": { "type": "number", "minimum": 0, "description": "Current experience points in the current level." }
+      },
+      "required": ["name", "level", "exp"]
+    },
+    "StatusBar": {
+      "title": "Status Bar",
+      "description": "A dynamic parameter like HP, MP, or Fatigue.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "color": { "type": "string", "format": "color" },
+        "value": { "type": "number" },
+        "max": { "type": "number" },
+        "repeatCount": { "type": "integer" }
+      },
+      "required": ["id", "name", "color", "value", "max", "repeatCount"]
+    },
+    "Reward": {
+      "title": "Reward",
+      "description": "A specific attribute gain associated with a task.",
+      "type": "object",
+      "properties": {
+        "statusBarId": { "type": "string" },
+        "amount": { "type": "number" }
+      },
+      "required": ["statusBarId", "amount"]
+    },
+    "Quest": {
+      "title": "Quest",
+      "description": "A mission with objectives and multiple rewards.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["main", "side"] },
+        "rewards": {
+          "type": "array",
+          "items": { "$ref": "#/entities/Reward" }
+        }
+      },
+      "required": ["id", "title", "description", "type", "rewards"]
+    },
+    "GrindTask": {
+      "title": "Grind Task",
+      "description": "A repeatable directive for steady growth.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "rewards": {
+          "type": "array",
+          "items": { "$ref": "#/entities/Reward" }
+        }
+      },
+      "required": ["id", "title", "rewards"]
+    },
+    "Problem": {
+      "title": "Problem",
+      "description": "A system threat that carries a penalty.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "xpPenalty": { "type": "number", "minimum": 0 }
+      },
+      "required": ["id", "title", "xpPenalty"]
+    },
+    "Skill": {
+      "title": "Skill",
+      "description": "A learned ability or protocol.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "level": { "type": "integer" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "name", "level", "description"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/profile": {
+      "schema": "#/entities/Character",
+      "description": "Individual user character data."
+    },
+    "/users/{userId}/statusBars": {
+      "schema": "#/entities/StatusBar",
+      "description": "The user's tracked parameters."
+    },
+    "/users/{userId}/quests": {
+      "schema": "#/entities/Quest",
+      "description": "Active missions for the user."
+    },
+    "/users/{userId}/grindTasks": {
+      "schema": "#/entities/GrindTask",
+      "description": "Repeatable tasks."
+    },
+    "/users/{userId}/problems": {
+      "schema": "#/entities/Problem",
+      "description": "System threats/penalties."
+    },
+    "/users/{userId}/skills": {
+      "schema": "#/entities/Skill",
+      "description": "Character skills."
+    }
+  }
+}
