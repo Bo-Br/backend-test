@@ -1,0 +1,6 @@
+{
+  "name": "Arise: System Dashboard",
+  "description": "A gamified life dashboard to track quests, grind tasks, and character status bars in an RPG-style interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
