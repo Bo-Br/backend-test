@@ -148,3 +148,9 @@ sudo ln -s /etc/nginx/sites-available/leveling-up /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 ```
+
+### 7. Troubleshooting: MIME Type Error (.tsx)
+If you see an error like `MIME type forbidden (application/octet-stream)` for `main.tsx`:
+1.  **Production Mode**: Ensure you have run `npm run build` and that you are starting your server with `NODE_ENV=production`. This ensures that the server serves the compiled files from the `dist` folder instead of source files.
+2.  **Nginx Configuration**: Make sure Nginx is **proxying** the requests to Node.js and not trying to serve the files itself. Avoid using `root /var/www/leveling-up;` in the same location block as `proxy_pass`.
+3.  **Permissions**: Ensure the user running the service (`www-data`) has read permissions for the entire project folder.

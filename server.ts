@@ -57,7 +57,22 @@ async function startServer() {
       server: { middlewareMode: true },
       appType: "spa",
     });
+    
+    // Use vite's connect instance as middleware
     app.use(vite.middlewares);
+
+    // Serve index.html through Vite's transformation in dev
+    app.get('*', async (req, res, next) => {
+      const url = req.originalUrl;
+      try {
+        let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
+        template = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e) {
+        vite.ssrFixStacktrace(e as Error);
+        next(e);
+      }
+    });
   } else {
     // Serve static files in production
     const distPath = path.join(process.cwd(), 'dist');
